@@ -1,0 +1,16 @@
+{
+  "name": "synology-chat-bridge",
+  "version": "1.0.0",
+  "description": "Bridge between Synology Chat and Claude Code Executor",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "dev": "bun --watch run src/index.ts"
+  },
+  "dependencies": {
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

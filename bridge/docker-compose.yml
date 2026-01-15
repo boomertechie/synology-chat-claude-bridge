@@ -1,0 +1,30 @@
+# Synology Chat Bridge - Docker Compose
+# Deploy this on your Synology NAS
+
+version: '3.8'
+
+services:
+  bridge:
+    build: .
+    container_name: claude-chat-bridge
+    restart: unless-stopped
+    ports:
+      - "3456:3456"
+    volumes:
+      - ./data:/app/data
+      - ./config/.env:/app/.env:ro
+    environment:
+      - TZ=America/Los_Angeles
+    env_file:
+      - ./config/.env
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3456/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

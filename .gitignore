@@ -1,0 +1,29 @@
+# Environment files with real credentials
+config/.env
+bridge/config/.env
+
+# Session data
+sessions/*.json
+sessions/*.sqlite
+bridge/data/
+
+# Logs
+logs/
+*.log
+
+# SQLite databases
+*.sqlite
+*.db
+
+# Dependencies
+node_modules/
+bun.lockb
+bun.lock
+
+# Build artifacts
+dist/
+build/
+
+# OS files
+.DS_Store
+Thumbs.db
