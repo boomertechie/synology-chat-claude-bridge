@@ -64,9 +64,47 @@ export class SynologyClient {
   }
 
   /**
-   * Split long messages on paragraph boundaries
+   * Split long messages on paragraph boundaries while preserving code blocks
    */
   private chunkMessage(text: string): string[] {
+    // 1. Extract code blocks and replace with placeholders
+    const codeBlocks: string[] = [];
+    const textWithPlaceholders = text.replace(/```[\s\S]*?```/g, (match) => {
+      codeBlocks.push(match);
+      return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+    });
+
+    // 2. Chunk the text with placeholders (existing logic)
+    const rawChunks = this.chunkTextContent(textWithPlaceholders);
+
+    // 3. Restore code blocks in chunks
+    const chunksWithCode = rawChunks.map((chunk) => {
+      return chunk.replace(/__CODE_BLOCK_(\d+)__/g, (_, idx) => {
+        const codeBlock = codeBlocks[parseInt(idx)];
+        // Warn if code block is large but keep it intact
+        if (codeBlock.length > MAX_MESSAGE_LENGTH) {
+          console.warn(
+            `Code block ${idx} is ${codeBlock.length} chars (exceeds ${MAX_MESSAGE_LENGTH} limit but kept intact)`
+          );
+        }
+        return codeBlock;
+      });
+    });
+
+    // 4. Add chunk indicators if multiple chunks exist
+    if (chunksWithCode.length > 1) {
+      return chunksWithCode.map(
+        (chunk, i) => `[${i + 1}/${chunksWithCode.length}] ${chunk}`
+      );
+    }
+
+    return chunksWithCode;
+  }
+
+  /**
+   * Internal method: chunk text content (without code block handling)
+   */
+  private chunkTextContent(text: string): string[] {
     if (text.length <= MAX_MESSAGE_LENGTH) {
       return [text];
     }
