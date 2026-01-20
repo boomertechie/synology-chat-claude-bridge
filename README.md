@@ -46,7 +46,7 @@ Runs on the machine with Claude Code installed. Accepts HTTP requests and spawns
 
 Docker container that receives webhooks from Synology Chat, forwards to the Executor, and sends responses back.
 
-- **Location:** `/volume1/docker/claude-chat-bridge/`
+- **Location:** `/volume/docker/claude-chat-bridge/`
 - **Port:** 3456
 - **Image:** `claude-bridge-bridge:latest`
 
