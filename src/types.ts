@@ -18,6 +18,14 @@ export interface ExecuteResponse {
   error?: string;
 }
 
+export interface ContextState {
+  estimated_tokens: number;
+  needs_summarization: boolean;
+  conversation_summary?: string;
+  last_summarization?: string;
+  chunk_count?: number;
+}
+
 export interface SessionData {
   session_id: string;
   claude_session_id?: string;
@@ -25,6 +33,7 @@ export interface SessionData {
   created_at: string;
   last_activity: string;
   message_count: number;
+  context_state?: ContextState;
 }
 
 export interface QueuedRequest {
