@@ -8,7 +8,7 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { sessionManager } from './session-manager';
 import { requestQueue } from './queue';
-import { runClaude } from './claude-runner';
+import { ContextManager } from './context-manager';
 import type { ExecuteRequest, ExecuteResponse } from './types';
 
 const app = new Hono();
@@ -70,25 +70,31 @@ app.post('/execute', async (c) => {
     session = await sessionManager.create(session_id, user_name);
   }
 
-  // Use existing Claude session ID if available
-  const claudeSessionId = session.claude_session_id || claude_session_id;
+  // If client provided a Claude session ID and session doesn't have one yet, use it
+  if (claude_session_id && !session.claude_session_id) {
+    session.claude_session_id = claude_session_id;
+  }
 
   try {
-    // Queue the execution
+    // Queue the execution using ContextManager
     const result = await requestQueue.add(async () => {
-      return await runClaude({
+      return await ContextManager.execute({
         prompt,
-        sessionId: claudeSessionId,
+        session,
         userName: user_name,
       });
     });
 
-    // Update session with new Claude session ID
+    // Update session with new Claude session ID and context state
+    const updates: Partial<import('./types').SessionData> = {
+      context_state: result.contextState,
+    };
+
     if (result.sessionId) {
-      await sessionManager.update(session_id, {
-        claude_session_id: result.sessionId,
-      });
+      updates.claude_session_id = result.sessionId;
     }
+
+    await sessionManager.update(session_id, updates);
     await sessionManager.incrementMessageCount(session_id);
 
     const response: ExecuteResponse = {
@@ -99,7 +105,7 @@ app.post('/execute', async (c) => {
       error: result.error,
     };
 
-    console.log(`Execute complete: session=${session_id}, success=${result.success}`);
+    console.log(`Execute complete: session=${session_id}, success=${result.success}, tokens=${result.contextState.estimated_tokens}`);
     return c.json(response);
 
   } catch (error) {
